@@ -1,0 +1,123 @@
+version: "3.8"
+services:
+  nginx-backend:
+    image: nginx
+    container_name: presta-banco-nginx-backend
+    restart: always
+    ports:
+      - 80:80
+    volumes:
+      - ./backend.conf:/etc/nginx/nginx.conf
+    networks:
+      - presta-banco-backend-network
+    depends_on:
+      - backend1
+      - backend2
+      - backend3
+      
+  nginx-frontend:
+    image: nginx
+    container_name: presta-banco-nginx-frontend
+    restart: always
+    ports:
+      - 8070:8070
+    volumes:
+      - ./frontend.conf:/etc/nginx/nginx.conf
+    networks:
+      - presta-banco-frontend-network
+    depends_on:
+      - frontend1
+      - frontend2
+      - frontend3
+
+  postgres:
+    container_name: presta-banco-postgres
+    image: postgres
+    restart: on-failure
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - presta-banco-backend-network
+    environment:      
+      POSTGRES_PASSWORD: felipeb222
+    ports:
+      - 5435:5432
+
+  backend1:
+    container_name: presta-banco-backend-container1
+    image: felipeb2001/backend-imagen
+    ports:
+      - 8091:8090
+    environment:
+      ADDRESS: presta-banco-postgres-container
+      PORT: 5432
+      PASS: felipeb222
+    networks:
+      - presta-banco-backend-network
+    restart: on-failure
+    depends_on:
+      - postgres
+
+  backend2:
+    container_name: presta-banco-backend-container2
+    image: felipeb2001/backend-imagen
+    ports:
+      - 8092:8090
+    environment:
+      ADDRESS: presta-banco-postgres-container
+      PORT: 5432
+      PASS: felipeb222
+    networks:
+      - presta-banco-backend-network
+    restart: on-failure
+    depends_on:
+      - postgres
+
+  backend3:
+    container_name: presta-banco-backend-container3
+    image: felipeb2001/backend-imagen
+    ports:
+      - 8093:8090
+    environment:
+      ADDRESS: presta-banco-postgres-container
+      PORT: 5432
+      PASS: felipeb222
+    networks:
+      - presta-banco-backend-network
+    restart: on-failure
+    depends_on:
+      - postgres
+
+  frontend1:
+    container_name: presta-banco-frontend-container1
+    image: felipeb2001/frontend-imagen
+    ports:
+      - 3001:3000
+    networks:
+      - presta-banco-frontend-network
+    restart: on-failure
+
+  frontend2:
+    container_name: presta-banco-frontend-container2
+    image: felipeb2001/frontend-imagen
+    ports:
+      - 3002:3000
+    networks:
+      - presta-banco-frontend-network
+    restart: on-failure
+
+  frontend3:
+    container_name: presta-banco-frontend-container3
+    image: felipeb2001/frontend-imagen
+    ports:
+      - 3003:3000
+    networks:
+      - presta-banco-frontend-network
+    restart: on-failure
+
+volumes:
+  postgres-data:
+
+networks:
+  presta-banco-backend-network:
+  presta-banco-frontend-network:
