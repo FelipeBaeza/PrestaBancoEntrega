@@ -26,7 +26,7 @@ pipeline{
                     script{
                         bat "docker context use default"
                          withDockerRegistry(credentialsId: 'docker-credentials'){
-                            bat "docker build -t felipeb2001/back-image ."
+                            bat "docker build -t felipeb2001/backend-image ."
                             bat "docker push felipeb2001/back-image"
                         }
                     }                    
