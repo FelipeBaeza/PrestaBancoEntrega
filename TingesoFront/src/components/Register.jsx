@@ -37,7 +37,7 @@ const Register = () => {
   // Función de validación
   const validateRutAndPassword = async (rut, password) => {
     try {
-      const response = await axios.get(`http://localhost:8090/api/v1/clients/validateRutAndPassword/${rut}/${password}`);
+      const response = await clientService.validateRutAndPassword({ rut, password });
       return response.data; // Retorna true si está disponible, false si ya existe
     } catch (error) {
       console.error('Error en validación:', error);

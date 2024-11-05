@@ -37,7 +37,7 @@ const getAllRequests = () => {
 }
 
 const getDocument = (id, documentType) => {
-    return httpClient.get(`http://localhost:8090/api/v1/creditRequest/${id}/documents/${documentType}`);
+    return httpClient.get(`/api/v1/creditRequest/${id}/documents/${documentType}`);
 }
 
 const getRequest = (id) => {
