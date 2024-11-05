@@ -24,6 +24,7 @@ pipeline{
             steps{
                 dir("TingesoBack"){
                     script{
+                        bat "docker context use default"
                          withDockerRegistry(credentialsId: 'docker-credentials'){
                             bat "docker build -t felipeb2001/back-image ."
                             bat "docker push felipeb2001/back-image"
