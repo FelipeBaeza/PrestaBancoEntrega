@@ -10,7 +10,7 @@ const Home = () => {
           <a href="https://spring.io/projects/spring-boot">Spring Boot</a> en el backend,{" "}
           <a href="https://reactjs.org/">React</a> en el frontend, y{" "}
           <a href="https://www.postgresql.org/">Postgres</a> como motor de 
-          base de datos.
+          base de datos. 
         </p>
       </div>
       
