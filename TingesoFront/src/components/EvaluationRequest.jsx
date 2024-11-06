@@ -50,6 +50,7 @@ const EvaluationRequest = () => {
   const { applicationId } = useParams();
   const { typeLoan } = useParams();
   const navigate = useNavigate();
+  const [isSubmitDisabled, setIsSubmitDisabled] = useState(true);
 
   useEffect(() => {
     let isMounted = true;
@@ -187,6 +188,7 @@ const EvaluationRequest = () => {
       setSavingStatus(response);
       formValues.savingsCapacity = false;
     }
+    setIsSubmitDisabled(false); // Habilitar el botón de enviar solicitud
   };
 
   const handleSubmit = async (event) => {
@@ -211,8 +213,7 @@ const EvaluationRequest = () => {
 
   const handleDownloadDocument = async (documentName) => {
     try {
-      const response = await axios.get(
-        `http://localhost:8090/api/v1/creditRequest/${applicationId}/documents/${documentName}`,
+      const response = await service.getDocument(applicationId, documentName,
         { responseType: 'blob' }
       );
       
@@ -479,6 +480,7 @@ const EvaluationRequest = () => {
                     color="primary" 
                     type="submit" 
                     fullWidth
+                    disabled={isSubmitDisabled}
                   >
                     Enviar Solicitud
                   </Button>
