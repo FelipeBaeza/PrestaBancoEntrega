@@ -212,7 +212,7 @@ const EvaluationRequest = () => {
   const handleDownloadDocument = async (documentName) => {
     try {
       const response = await axios.get(
-        `http://http://191.235.93.182/api/v1/creditRequest/${applicationId}/documents/${documentName}`,
+        `http://191.235.93.182/api/v1/creditRequest/${applicationId}/documents/${documentName}`,
         { responseType: 'blob' }
       );
       
