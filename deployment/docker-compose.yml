@@ -1,7 +1,10 @@
+version: '3.8'
+
 services:
+  # Nginx backend server
   nginx-backend:
-    image: nginx
-    container_name: presta-banco-nginx-backend
+    image: nginx:latest
+    container_name: presta-banco-nginx-backend-container
     restart: always
     ports:
       - 80:80
@@ -10,13 +13,14 @@ services:
     networks:
       - presta-banco-backend-network
     depends_on:
-      - backend1
-      - backend2
-      - backend3
-      
+      - spring1
+      - spring2
+      - spring3
+
+  # Nginx frontend server
   nginx-frontend:
-    image: nginx
-    container_name: presta-banco-nginx-frontend
+    image: nginx:latest
+    container_name: presta-banco-nginx-frontend-container
     restart: always
     ports:
       - 8070:8070
@@ -25,97 +29,119 @@ services:
     networks:
       - presta-banco-frontend-network
     depends_on:
-      - frontend1
-      - frontend2
-      - frontend3
+      - react1
+      - react2
+      - react3
 
+  # PostgreSQL service
   postgres:
     container_name: presta-banco-postgres-container
     image: postgres
     restart: on-failure
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - presta-banco-postgres-volume:/var/lib/postgresql/data
     networks:
       - presta-banco-backend-network
     environment:
       POSTGRES_PASSWORD: felipeb222
+      POSTGRES_DB: bd-tingeso
     ports:
       - 5435:5432
 
-  backend1:
-    container_name: presta-banco-backend-container1
+  # Spring backend services
+  spring1:
+    container_name: presta-banco-backend-container-1
     image: felipeb2001/backend-image
     ports:
-      - 8091:8090
+      - 8081:8080
     environment:
       ADDRESS: presta-banco-postgres-container
       PORT: 5432
-      PASS: felipeb222
+      DB_NAME: bd-tingeso
+      DB_USERNAME: postgres
+      DB_PASSWORD: felipeb222
     networks:
       - presta-banco-backend-network
-    restart: on-failure
+    deploy:
+      restart_policy:
+        condition: on-failure
     depends_on:
       - postgres
 
-  backend2:
-    container_name: presta-banco-backend-container2
+  spring2:
+    container_name: presta-banco-backend-container-2
     image: felipeb2001/backend-image
     ports:
-      - 8092:8090
+      - 8082:8080
     environment:
       ADDRESS: presta-banco-postgres-container
       PORT: 5432
-      PASS: felipeb222
+      DB_NAME: bd-tingeso
+      DB_USERNAME: postgres
+      DB_PASSWORD: felipeb222
     networks:
       - presta-banco-backend-network
-    restart: on-failure
+    deploy:
+      restart_policy:
+        condition: on-failure
     depends_on:
       - postgres
 
-  backend3:
-    container_name: presta-banco-backend-container3
+  spring3:
+    container_name: presta-banco-backend-container-3
     image: felipeb2001/backend-image
     ports:
-      - 8093:8090
+      - 8083:8080
     environment:
       ADDRESS: presta-banco-postgres-container
       PORT: 5432
-      PASS: felipeb222
+      DB_NAME: bd-tingeso
+      DB_USERNAME: postgres
+      DB_PASSWORD: felipeb222
     networks:
       - presta-banco-backend-network
-    restart: on-failure
+    deploy:
+      restart_policy:
+        condition: on-failure
     depends_on:
       - postgres
 
-  frontend1:
-    container_name: presta-banco-frontend-container1
+  # React frontend services
+  react1:
+    container_name: presta-banco-frontend-container-1
     image: felipeb2001/frontend-image
     ports:
       - 3001:3000
     networks:
       - presta-banco-frontend-network
-    restart: on-failure
+    deploy:
+      restart_policy:
+        condition: on-failure
 
-  frontend2:
-    container_name: presta-banco-frontend-container2
+  react2:
+    container_name: presta-banco-frontend-container-2
     image: felipeb2001/frontend-image
     ports:
       - 3002:3000
     networks:
       - presta-banco-frontend-network
-    restart: on-failure
+    deploy:
+      restart_policy:
+        condition: on-failure
 
-  frontend3:
-    container_name: presta-banco-frontend-container3
+  react3:
+    container_name: presta-banco-frontend-container-3
     image: felipeb2001/frontend-image
     ports:
       - 3003:3000
     networks:
       - presta-banco-frontend-network
-    restart: on-failure
+    deploy:
+      restart_policy:
+        condition: on-failure
 
 volumes:
-  postgres-data:
+  presta-banco-postgres-volume:
 
 networks:
   presta-banco-backend-network:
