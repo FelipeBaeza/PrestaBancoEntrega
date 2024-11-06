@@ -17,7 +17,7 @@ pipeline {
                         bat "docker context use default"
                         withDockerRegistry(credentialsId: 'docker-credentials') {
                             bat "docker build -t felipeb2001/frontend-image ."
-                            bat "docker push felipeb2001/front-image"
+                            bat "docker push felipeb2001/frontend-image"
                         }
                     }
                 }

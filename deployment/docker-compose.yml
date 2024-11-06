@@ -37,17 +37,10 @@ services:
       - postgres-data:/var/lib/postgresql/data
     networks:
       - presta-banco-backend-network
-    environment:      
+    environment:
       POSTGRES_PASSWORD: felipeb222
-      POSTGRES_DB: bd-tingeso
     ports:
       - 5435:5432
-    command: >
-      bash -c "
-      postgres -D /var/lib/postgresql/data &
-      sleep 5 &&
-      psql -U postgres -c 'CREATE DATABASE "bd-tingeso";'
-      "
 
   backend1:
     container_name: presta-banco-backend-container1
