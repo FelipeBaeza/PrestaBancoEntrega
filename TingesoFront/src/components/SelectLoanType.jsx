@@ -35,7 +35,7 @@ const SelectLoanType = () => {
     },
     {
       value: 'secondHome',
-      label: 'Segunda Vivienda',
+      label: 'Segunda Vivienda (Chile)',
       icon: <Villa fontSize="large" color="primary" />,
       description: 'Para adquirir una propiedad adicional'
     },
