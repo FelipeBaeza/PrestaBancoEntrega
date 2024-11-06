@@ -31,15 +31,16 @@ services:
       - frontend3
 
   postgres:
-    container_name: presta-banco-postgres
+    container_name: presta-banco-postgres-container
     image: postgres
     restart: on-failure
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - deployment_postgres-data:/var/lib/postgresql/data
     networks:
       - presta-banco-backend-network
     environment:      
       POSTGRES_PASSWORD: felipeb222
+      POSTGRES_DB: bd-tingeso
     ports:
       - 5435:5432
 
@@ -75,7 +76,7 @@ services:
 
   backend3:
     container_name: presta-banco-backend-container3
-    image: felipeb2001/backend-imagen
+    image: felipeb2001/backend-image
     ports:
       - 8093:8090
     environment:
@@ -115,8 +116,6 @@ services:
       - presta-banco-frontend-network
     restart: on-failure
 
-volumes:
-  postgres-data:
 
 networks:
   presta-banco-backend-network:
