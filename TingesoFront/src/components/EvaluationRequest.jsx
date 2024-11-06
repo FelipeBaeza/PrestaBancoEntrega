@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
-import { TextField, Box, Button, Container, Grid, Typography, Paper, FormControl, FormControlLabel, RadioGroup, Radio, Divider} from '@mui/material';
+import { TextField, Box, Button, Container, Grid, Typography, Paper, FormControl, FormControlLabel, RadioGroup, Radio, Divider } from '@mui/material';
 import DownloadIcon from '@mui/icons-material/Download';
 import service from '../services/request.service';
 import evaluationService from '../services/evaluation.service';
@@ -57,7 +57,7 @@ const EvaluationRequest = () => {
     const fetchEvaluationData = async () => {
       setIsLoading(true);
       setError(null);
-      
+
       try {
         const response = await evaluationService.dataEvaluation({ idRequest: applicationId });
         if (isMounted) {
@@ -113,14 +113,18 @@ const EvaluationRequest = () => {
   const [debtRatio, setDebtRatio] = useState(null);
   const [debtResult, setDebtResult] = useState('');
   const [debtError, setDebtError] = useState(null);
-  const [openDialog, setOpenDialog] = useState(false);
   const [savingStatus, setSavingStatus] = useState('');
   const [savingRatio, setSavingRatio] = useState(null);
+  const [isSubmitDisabled, setIsSubmitDisabled] = useState(true);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
     setFormValues({
       ...formValues,
+      [name]: value === 'si',
+    });
+    setFormSavings({
+      ...formSavings,
       [name]: value === 'si',
     });
   };
@@ -137,12 +141,12 @@ const EvaluationRequest = () => {
       });
 
       const monthlyPayment = simulationData.data;
-      
-      // Calcular relación cuota/ingreso
+
+
       const paymentToIncomeRatio = (monthlyPayment / monthlyIncome) * 100;
       setRatio(paymentToIncomeRatio);
-      
-      // Evaluar y mostrar resultado
+
+
       const isApproved = paymentToIncomeRatio <= 35;
       setApproved(isApproved);
       setResultado(isApproved ? "Aprobado: Relación cuota/ingreso adecuada" : "Rechazado: Relación cuota/ingreso demasiado alta");
@@ -155,7 +159,7 @@ const EvaluationRequest = () => {
     try {
       const debtToIncomeRatio = (currentDebts / monthlyIncome) * 100;
       setDebtRatio(debtToIncomeRatio);
-      
+
       const isDebtApproved = debtToIncomeRatio <= 50;
       setDebtResult(isDebtApproved ? "Aprobado: Relación deuda/ingreso adecuada" : "Rechazado: Relación deuda/ingreso demasiado alta");
     } catch (error) {
@@ -165,7 +169,7 @@ const EvaluationRequest = () => {
 
   const checkSavings = () => {
     let positiveAnswers = 0;
-    
+
     if (formValues.savingsCapacity) positiveAnswers++;
     if (formValues.savingsBalance) positiveAnswers++;
     if (formValues.positiveBalance) positiveAnswers++;
@@ -187,6 +191,7 @@ const EvaluationRequest = () => {
       setSavingStatus(response);
       formValues.savingsCapacity = false;
     }
+    setIsSubmitDisabled(false); // Habilitar el botón de enviar solicitud
   };
 
   const handleSubmit = async (event) => {
@@ -215,7 +220,7 @@ const EvaluationRequest = () => {
         `http://191.235.93.182/api/v1/creditRequest/${applicationId}/documents/${documentName}`,
         { responseType: 'blob' }
       );
-      
+
       const blob = new Blob([response.data], { type: 'application/pdf' });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -233,7 +238,7 @@ const EvaluationRequest = () => {
 
   const DocumentButtons = () => {
     const documentos = DOCUMENTS_BY_TYPE[typeLoan] || [];
-    
+
     return (
       <Grid container spacing={2} sx={{ mt: 2 }}>
         <Grid item xs={12}>
@@ -271,7 +276,7 @@ const EvaluationRequest = () => {
     <Container maxWidth="md">
       <Paper elevation={3} style={{ padding: '2rem', marginTop: '2rem' }}>
         <Grid item xs={12}>
-        <Box sx={{ mt: 3, width: '100%' }}>
+          <Box sx={{ mt: 3, width: '100%' }}>
             <DocumentButtons />
           </Box>
         </Grid>
@@ -283,7 +288,7 @@ const EvaluationRequest = () => {
         </Typography>
 
         <Divider style={{ marginTop: '1rem', marginBottom: '1rem' }} />
-        
+
         <Box sx={{ mb: 3, maxWidth: "400px", margin: "0 auto" }}>
           <Typography variant="h6" gutterBottom>
             Evaluación de Ingresos
@@ -292,10 +297,10 @@ const EvaluationRequest = () => {
             onChange={(e) => setMonthlyIncome(e.target.value)}
             fullWidth
             sx={{ mb: 2 }}
-            InputProps={{ startAdornment: <span>$</span>}}
+            InputProps={{ startAdornment: <span>$</span> }}
           />
-          <Button 
-            variant="contained" 
+          <Button
+            variant="contained"
             onClick={calculate}
             disabled={!monthlyIncome || loading}
             fullWidth
@@ -317,7 +322,7 @@ const EvaluationRequest = () => {
             <Grid item xs={12}>
               <FormControl component="fieldset" fullWidth>
                 <Typography variant="h6" align="center">¿Presenta una relación cuota/ingreso menor al 35%?</Typography>
-                <RadioGroup row name="incomeQuota" value={formValues.incomeQuota === null ? '' : formValues.incomeQuota ? 'si' : 'no'} onChange={handleChange} sx={{justifyContent: 'center', mt: 2 }}> 
+                <RadioGroup row name="incomeQuota" value={formValues.incomeQuota === null ? '' : formValues.incomeQuota ? 'si' : 'no'} onChange={handleChange} sx={{ justifyContent: 'center', mt: 2 }}>
                   <FormControlLabel value="si" control={<Radio color="primary" />} label="Sí" />
                   <FormControlLabel value="no" control={<Radio color="secondary" />} label="No" />
                 </RadioGroup>
@@ -328,7 +333,7 @@ const EvaluationRequest = () => {
             <Grid item xs={12}>
               <FormControl component="fieldset" fullWidth>
                 <Typography variant="h6" align="center">¿Tiene un buen historial crediticio sin morosidades recientes?</Typography>
-                <RadioGroup row name="creditHistory" value={formValues.creditHistory === null ? '' : formValues.creditHistory ? 'si' : 'no'} onChange={handleChange}sx={{justifyContent: 'center', mt: 2 }}>
+                <RadioGroup row name="creditHistory" value={formValues.creditHistory === null ? '' : formValues.creditHistory ? 'si' : 'no'} onChange={handleChange} sx={{ justifyContent: 'center', mt: 2 }}>
                   <FormControlLabel value="si" control={<Radio color="primary" />} label="Sí" />
                   <FormControlLabel value="no" control={<Radio color="secondary" />} label="No" />
                 </RadioGroup>
@@ -339,7 +344,7 @@ const EvaluationRequest = () => {
             <Grid item xs={12}>
               <FormControl component="fieldset" fullWidth>
                 <Typography variant="h6" align="center">¿Cuenta con al menos 1 a 2 años de antigüedad en su empleo actual?</Typography>
-                <RadioGroup row name="employmentSeniority" value={formValues.employmentSeniority === null ? '' : formValues.employmentSeniority ? 'si' : 'no'} onChange={handleChange}sx={{justifyContent: 'center', mt: 2 }}>
+                <RadioGroup row name="employmentSeniority" value={formValues.employmentSeniority === null ? '' : formValues.employmentSeniority ? 'si' : 'no'} onChange={handleChange} sx={{ justifyContent: 'center', mt: 2 }}>
                   <FormControlLabel value="si" control={<Radio color="primary" />} label="Sí" />
                   <FormControlLabel value="no" control={<Radio color="secondary" />} label="No" />
                 </RadioGroup>
@@ -352,17 +357,17 @@ const EvaluationRequest = () => {
               <Typography variant="h6" gutterBottom>
                 Evaluación Deuda/Ingreso
               </Typography>
-              <TextField 
-                label="Deudas Mensuales Actuales" 
-                type="number" 
+              <TextField
+                label="Deudas Mensuales Actuales"
+                type="number"
                 value={currentDebts}
                 onChange={(e) => setCurrentDebts(e.target.value)}
                 fullWidth
                 sx={{ mb: 2 }}
-                InputProps={{ startAdornment: <span>$</span>}}
+                InputProps={{ startAdornment: <span>$</span> }}
               />
-              <Button 
-                variant="contained" 
+              <Button
+                variant="contained"
                 onClick={calculateDebtRatio}
                 disabled={!currentDebts || !monthlyIncome || loading}
                 fullWidth
@@ -376,12 +381,12 @@ const EvaluationRequest = () => {
               )}
               {debtResult && <Typography>{debtResult}</Typography>}
               {debtError && <Typography color="error">{debtError}</Typography>}
-        </Box>
+            </Box>
 
             <Grid item xs={12}>
               <FormControl component="fieldset" fullWidth>
                 <Typography variant="h6" align="center">¿Su relación deuda/ingreso es menor al 50% incluyendo el nuevo crédito?</Typography>
-                <RadioGroup row name="incomeDebtRelation" value={formValues.incomeDebtRelation === null ? '' : formValues.incomeDebtRelation ? 'si' : 'no'} onChange={handleChange}sx={{justifyContent: 'center', mt: 2 }}>
+                <RadioGroup row name="incomeDebtRelation" value={formValues.incomeDebtRelation === null ? '' : formValues.incomeDebtRelation ? 'si' : 'no'} onChange={handleChange} sx={{ justifyContent: 'center', mt: 2 }}>
                   <FormControlLabel value="si" control={<Radio color="primary" />} label="Sí" />
                   <FormControlLabel value="no" control={<Radio color="secondary" />} label="No" />
                 </RadioGroup>
@@ -393,7 +398,7 @@ const EvaluationRequest = () => {
             <Grid item xs={12}>
               <FormControl component="fieldset" fullWidth>
                 <Typography variant="h6" align="center">¿El monto solicitado respeta el límite de financiamiento según el tipo de propiedad?</Typography>
-                <RadioGroup row name="financingLimit" value={formValues.financingLimit === null ? '' : formValues.financingLimit ? 'si' : 'no'} onChange={handleChange}sx={{justifyContent: 'center', mt: 2 }}>
+                <RadioGroup row name="financingLimit" value={formValues.financingLimit === null ? '' : formValues.financingLimit ? 'si' : 'no'} onChange={handleChange} sx={{ justifyContent: 'center', mt: 2 }}>
                   <FormControlLabel value="si" control={<Radio color="primary" />} label="Sí" />
                   <FormControlLabel value="no" control={<Radio color="secondary" />} label="No" />
                 </RadioGroup>
@@ -404,7 +409,7 @@ const EvaluationRequest = () => {
             <Grid item xs={12}>
               <FormControl component="fieldset" fullWidth>
                 <Typography variant="h6" align="center">¿La edad del solicitante permite pagar el crédito antes de los 75 años?</Typography>
-                <RadioGroup row name="applicantAge" value={formValues.applicantAge === null ? '' : formValues.applicantAge ? 'si' : 'no'} onChange={handleChange}sx={{justifyContent: 'center', mt: 2 }}>
+                <RadioGroup row name="applicantAge" value={formValues.applicantAge === null ? '' : formValues.applicantAge ? 'si' : 'no'} onChange={handleChange} sx={{ justifyContent: 'center', mt: 2 }}>
                   <FormControlLabel value="si" control={<Radio color="primary" />} label="Sí" />
                   <FormControlLabel value="no" control={<Radio color="secondary" />} label="No" />
                 </RadioGroup>
@@ -415,76 +420,74 @@ const EvaluationRequest = () => {
             <Divider style={{ marginTop: '1rem', marginBottom: '1rem' }} />
 
             <Box sx={{ mb: 3, maxWidth: "400px", margin: "0 auto" }}>
-      <Typography variant="h5" gutterBottom>
-        Capacidad de Ahorro
-      </Typography>
-
-      {error && (
-        <Typography variant="body1" color="error" align="center" sx={{ mt: 2 }}>
-          {error}
-        </Typography>
-      )}
-
-      <Grid container spacing={3}>
-        {[
-          { name: 'savingsBalance', question: '¿Su cuenta de ahorros o inversiones tiene un saldo equivalente al menos al 10% del monto del préstamo solicitado?' },
-          { name: 'positiveBalance', question: '¿Mantiene un saldo positivo en su cuenta de ahorros sin retiros significativos (más del 50%) en los últimos 12 meses?' },
-          { name: 'regularDeposits', question: '¿Realiza depósitos regulares en su cuenta de ahorros o inversión, sumando al menos el 5% de sus ingresos mensuales?' },
-          { name: 'accumulatedBalance', question: '¿Tiene un saldo acumulado en la cuenta de ahorros equivalente al 10% o 20% del préstamo según su antigüedad?' },
-          { name: 'avoidWithdrawals', question: '¿Ha evitado retiros superiores al 30% del saldo en los últimos 6 meses?' },
-        ].map((item, index) => (
-          <Grid item xs={12} key={index}>
-            <FormControl component="fieldset" fullWidth>
-              <Typography variant="h6" align="center">
-                {item.question}
+              <Typography variant="h5" gutterBottom>
+                Capacidad de Ahorro
               </Typography>
-              <RadioGroup
-                row
-                name={item.name}
-                value={formValues[item.name] === null ? '' : formValues[item.name] ? 'si' : 'no'}
-                onChange={handleChange}
-                sx={{ justifyContent: 'center', mt: 2 }}
-              >
-                <FormControlLabel value="si" control={<Radio color="primary" />} label="Sí" />
-                <FormControlLabel value="no" control={<Radio color="secondary" />} label="No" />
-              </RadioGroup>
-            </FormControl>
-            <Divider />
-          </Grid>
-        ))}
 
-        <Grid item xs={12}>
-          <Button
-            variant="contained"
-            color="primary"
-            fullWidth
-            onClick={checkSavings}
-          >
-            Revisar Estado de Ahorro
-          </Button>
-          <Typography variant="body1" align="center" sx={{ mt: 2 }}>
-              {savingStatus}
-          </Typography>
+              {error && (
+                <Typography variant="body1" color="error" align="center" sx={{ mt: 2 }}>
+                  {error}
+                </Typography>
+              )}
 
-        </Grid>
-      </Grid>
-    </Box>
+              <Grid container spacing={3}>
+                {[
+                  { name: 'savingsBalance', question: '¿Su cuenta de ahorros o inversiones tiene un saldo equivalente al menos al 10% del monto del préstamo solicitado?' },
+                  { name: 'positiveBalance', question: '¿Mantiene un saldo positivo en su cuenta de ahorros sin retiros significativos (más del 50%) en los últimos 12 meses?' },
+                  { name: 'regularDeposits', question: '¿Realiza depósitos regulares en su cuenta de ahorros o inversión, sumando al menos el 5% de sus ingresos mensuales?' },
+                  { name: 'accumulatedBalance', question: '¿Tiene un saldo acumulado en la cuenta de ahorros equivalente al 10% o 20% del préstamo según su antigüedad?' },
+                  { name: 'avoidWithdrawals', question: '¿Ha evitado retiros superiores al 30% del saldo en los últimos 6 meses?' },
+                ].map((item, index) => (
+                  <Grid item xs={12} key={index}>
+                    <FormControl component="fieldset" fullWidth>
+                      <Typography variant="h6" align="center">
+                        {item.question}
+                      </Typography>
+                      <RadioGroup
+                        row
+                        name={item.name}
+                        value={formSavings[item.name] === null ? '' : formSavings[item.name] ? 'si' : 'no'} onChange={handleChange} sx={{ justifyContent: 'center', mt: 2 }}>
+                        <FormControlLabel value="si" control={<Radio color="primary" />} label="Sí" />
+                        <FormControlLabel value="no" control={<Radio color="secondary" />} label="No" />
+                      </RadioGroup>
+                    </FormControl>
+                    <Divider />
+                  </Grid>
+                ))}
+
+                <Grid item xs={12}>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    fullWidth
+                    onClick={checkSavings}
+                  >
+                    Revisar Estado de Ahorro
+                  </Button>
+                  <Typography variant="body1" align="center" sx={{ mt: 2 }}>
+                    {savingStatus}
+                  </Typography>
+
+                </Grid>
+              </Grid>
+            </Box>
 
 
             <Grid item xs={12}>
               <Grid container spacing={2}>
                 <Grid item xs={6}>
-                  <Button 
-                    variant="contained" 
-                    color="primary" 
-                    type="submit" 
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    type="submit"
                     fullWidth
+                    disabled={isSubmitDisabled}
                   >
                     Enviar Solicitud
                   </Button>
                 </Grid>
                 <Grid item xs={6}>
-                  <Button 
+                  <Button
                     variant="outlined"
                     color="primary"
                     onClick={handleNavigateToList}
@@ -494,7 +497,7 @@ const EvaluationRequest = () => {
                   </Button>
                 </Grid>
                 <Grid item xs={6}>
-                  <Button 
+                  <Button
                     variant="outlined"
                     color="primary"
                     onClick={handleNavigateToExit}

@@ -1,23 +1,22 @@
 import React, { useState } from 'react';
-import { 
-  TextField, 
-  Button, 
-  Container, 
-  Grid, 
-  Typography, 
-  Paper, 
-  Divider, 
-  InputAdornment, 
+import {
+  TextField,
+  Button,
+  Container,
+  Grid,
+  Typography,
+  Paper,
+  Divider,
+  InputAdornment,
   Box,
   Alert,
   CircularProgress
 } from '@mui/material';
-import { 
+import {
   Upload as UploadIcon,
   ArrowBack,
   SaveAlt,
   Person,
-  CalendarToday
 } from '@mui/icons-material';
 import { useParams, useNavigate } from 'react-router-dom';
 import service from '../services/request.service';
@@ -28,7 +27,7 @@ const RequestRemodeling = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
-  
+
   const [formData, setFormData] = useState({
     rut: '',
     typeLoan: loanType,
@@ -51,7 +50,7 @@ const RequestRemodeling = () => {
     { name: 'creditHistory', label: 'Historial Crediticio', icon: <UploadIcon /> },
     { name: 'bankAccountState', label: 'Estado de Cuenta Bancario', icon: <UploadIcon /> },
     { name: 'workCertificate', label: 'Certificado Laboral', icon: <UploadIcon /> },
-];
+  ];
 
   const handleChange = (event) => {
     const { name, value } = event.target;

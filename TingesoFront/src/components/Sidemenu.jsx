@@ -77,7 +77,7 @@ export default function Sidemenu({ open, toggleDrawer }) {
                     <ListItemText primary="Listado de Solicitudes" />
                 </ListItemButton>
             </List>
-        
+
 
 
         </Box>

@@ -56,13 +56,13 @@ const SelectLoanType = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (selectedLoan) {
-      if(selectedLoan === 'firstHome') {
+      if (selectedLoan === 'firstHome') {
         navigate(`/requestFirstHome/${selectedLoan}`);
-      } else if(selectedLoan === 'secondHome') {
+      } else if (selectedLoan === 'secondHome') {
         navigate(`/requestSecondHome/${selectedLoan}`);
-      } else if(selectedLoan === 'commercial') {
+      } else if (selectedLoan === 'commercial') {
         navigate(`/requestCommercialProperty/${selectedLoan}`);
-      } else if(selectedLoan === 'remodeling') {
+      } else if (selectedLoan === 'remodeling') {
         navigate(`/requestRemodeling/${selectedLoan}`);
       }
     }
@@ -87,9 +87,10 @@ const SelectLoanType = () => {
                   <Grid container spacing={2}>
                     {loanTypes.map((option) => (
                       <Grid item xs={12} sm={6} key={option.value}>
-                        <Card 
+                        <Card
+                          // onClick para seleccionar el tipo de préstamo y asignarlo a la variable selectedLoan
                           onClick={() => setSelectedLoan(option.value)}
-                          sx={{ 
+                          sx={{
                             cursor: 'pointer',
                             transition: 'box-shadow 0.2s',
                             '&:hover': {
@@ -103,7 +104,7 @@ const SelectLoanType = () => {
                               <Grid container alignItems="center" spacing={1}>
                                 <Grid item>{option.icon}</Grid>
                                 <Grid item>
-                                  <Typography 
+                                  <Typography
                                     variant="h6"
                                     color={selectedLoan === option.value ? 'white' : 'text.primary'}
                                   >
@@ -111,9 +112,9 @@ const SelectLoanType = () => {
                                   </Typography>
                                 </Grid>
                               </Grid>
-                              <Typography 
-                                variant="body2" 
-                                sx={{ 
+                              <Typography
+                                variant="body2"
+                                sx={{
                                   mt: 1,
                                   color: selectedLoan === option.value ? 'white' : 'text.secondary'
                                 }}

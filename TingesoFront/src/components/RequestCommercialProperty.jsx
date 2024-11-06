@@ -1,26 +1,22 @@
 import React, { useState } from 'react';
-import { 
-  TextField, 
-  Container, 
-  Button, 
-  Grid, 
-  Typography, 
-  Paper, 
-  Divider, 
-  InputAdornment, 
+import {
+  TextField,
+  Container,
+  Button,
+  Grid,
+  Typography,
+  Paper,
+  Divider,
+  InputAdornment,
   Box,
   Alert,
   CircularProgress
 } from '@mui/material';
-import { 
-  Person, 
-  AttachFile, 
-  Upload, 
-  AccountBalance, 
-  Work,
+import {
+  Person,
+  Upload,
   SaveAlt,
-  ArrowBack,
-  CalendarToday
+  ArrowBack
 } from '@mui/icons-material';
 import { Upload as UploadIcon } from '@mui/icons-material';
 import { useParams, useNavigate } from 'react-router-dom';

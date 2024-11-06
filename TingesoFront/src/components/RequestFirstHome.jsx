@@ -1,26 +1,6 @@
 import React, { useState } from 'react';
-import { 
-  TextField, 
-  Button, 
-  Container, 
-  Grid, 
-  Typography, 
-  Paper, 
-  Divider, 
-  InputAdornment, 
-  Box,
-  Alert,
-  CircularProgress
-} from '@mui/material';
-import { 
-  Person, 
-  AttachFile,
-  Upload as UploadIcon,
-  SaveAlt,
-  ArrowBack,
-  CalendarToday,
-  AccountBalance
-} from '@mui/icons-material';
+import { TextField, Button, Container, Grid, Typography, Paper, Divider, InputAdornment, Box,Alert,CircularProgress}from '@mui/material';
+import { Person, Upload as UploadIcon,SaveAlt,ArrowBack} from '@mui/icons-material';
 import { useParams, useNavigate } from 'react-router-dom';
 import service from '../services/request.service';
 
@@ -202,10 +182,7 @@ const RequestFirstHome = () => {
                   component="label"
                   fullWidth
                   startIcon={<UploadIcon />}
-                  sx={{
-                    py: 2,
-                    textTransform: 'none'
-                  }}
+                  sx={{py: 2,textTransform: 'none'}}
                 >
                   {formData[doc.name] ? formData[doc.name].name : doc.label}
                   <input

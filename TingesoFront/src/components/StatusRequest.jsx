@@ -1,30 +1,6 @@
 import React, { useState } from 'react';
-import { 
-  TextField, 
-  Button, 
-  Container, 
-  Typography, 
-  Paper, 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableContainer, 
-  TableHead, 
-  TableRow, 
-  Box, 
-  Divider,
-  InputAdornment,
-  Alert,
-  CircularProgress
-} from '@mui/material';
-import { 
-  Person, 
-  Search, 
-  CheckCircle, 
-  Cancel, 
-  MonetizationOn,
-  Delete as DeleteIcon
-} from '@mui/icons-material';
+import { TextField, Button, Container, Typography, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Box, Divider, InputAdornment, Alert, CircularProgress } from '@mui/material';
+import { Person, Search, CheckCircle, Cancel, MonetizationOn, Delete as DeleteIcon } from '@mui/icons-material';
 import service from '../services/client.service';
 import evaluationService from '../services/evaluation.service';
 import requestService from '../services/request.service';
@@ -47,7 +23,6 @@ const StatusRequest = () => {
     setLoading(true);
     try {
       const response = await service.getAllStatus(rut);
-      // Convertir el array plano en array de objetos
       const formattedRequests = [];
       for (let i = 0; i < response.data.length; i += 2) {
         formattedRequests.push({
@@ -98,7 +73,7 @@ const StatusRequest = () => {
       console.log(id);
       try {
         await requestService.deleteRequest(id);
-        await fetchRequests(); 
+        await fetchRequests();
         setError(null);
       } catch (error) {
         setError('Error al eliminar la solicitud.');
@@ -143,14 +118,14 @@ const StatusRequest = () => {
               ),
             }}
           />
-          <Button 
-            variant="contained" 
-            color="primary" 
+          <Button
+            variant="contained"
+            color="primary"
             type="submit"
             fullWidth
             disabled={loading}
             startIcon={loading ? <CircularProgress size={20} /> : <Search />}
-            sx={{ 
+            sx={{
               py: 1.5,
               mb: 4
             }}
@@ -171,7 +146,7 @@ const StatusRequest = () => {
               </TableHead>
               <TableBody>
                 {requests.map((request, index) => (
-                  <TableRow 
+                  <TableRow
                     key={request.id}
                     sx={{ '&:nth-of-type(odd)': { backgroundColor: 'action.hover' } }}
                   >
@@ -181,7 +156,7 @@ const StatusRequest = () => {
                         <Typography>{request.status}</Typography>
                         {request.status === "Pre-Aprobada" && (
                           <Box sx={{ width: '100%', mt: 1 }}>
-                            <Button 
+                            <Button
                               variant="outlined"
                               color="primary"
                               onClick={() => handleDetailClick(request.id)}
@@ -192,9 +167,9 @@ const StatusRequest = () => {
                             </Button>
 
                             {showDetails && selectedRequest === request.id && (
-                              <Box sx={{ 
-                                mt: 2, 
-                                p: 2, 
+                              <Box sx={{
+                                mt: 2,
+                                p: 2,
                                 backgroundColor: 'background.paper',
                                 borderRadius: 1,
                                 boxShadow: 1

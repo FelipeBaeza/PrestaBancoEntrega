@@ -1,25 +1,18 @@
 import React, { useState } from 'react';
-import { 
-  Container, 
-  Paper, 
-  Grid, 
-  TextField, 
-  Button, 
-  Typography,
-  Box,
-  Divider 
-} from '@mui/material';
+import { Container, Paper, Grid, TextField, Button, Typography, Box, Divider }
+  from '@mui/material';
 import CalculateIcon from '@mui/icons-material/Calculate';
 import clientService from '../services/client.service';
 
 const SimulationCredit = () => {
-  const [formValues, setFormValues] = useState({ 
-    amount: '', 
-    interestRate: '', 
-    term: '' 
+  const [formValues, setFormValues] = useState({
+    amount: '',
+    interestRate: '',
+    term: ''
   });
   const [simulationResult, setSimulationResult] = useState(null);
   const [loading, setLoading] = useState(false);
+
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -46,7 +39,7 @@ const SimulationCredit = () => {
           Simulador de Crédito
         </Typography>
         <Divider sx={{ mb: 4 }} />
-        
+
         <form onSubmit={handleSubmit}>
           <Grid container spacing={4}>
             <Grid item xs={12}>
@@ -64,7 +57,7 @@ const SimulationCredit = () => {
                 helperText="Ingrese el monto que desea solicitar"
               />
             </Grid>
-            
+
             <Grid item xs={12} md={6}>
               <TextField
                 label="Tasa de Interés Anual"
@@ -80,7 +73,7 @@ const SimulationCredit = () => {
                 helperText="Ingrese la tasa de interés anual"
               />
             </Grid>
-            
+
             <Grid item xs={12} md={6}>
               <TextField
                 label="Plazo en Años"
@@ -118,11 +111,11 @@ const SimulationCredit = () => {
 
             {simulationResult && (
               <Grid item xs={12}>
-                <Paper 
-                  elevation={2} 
-                  sx={{ 
-                    p: 3, 
-                    mt: 2, 
+                <Paper
+                  elevation={2}
+                  sx={{
+                    p: 3,
+                    mt: 2,
                     backgroundColor: 'primary.light',
                     color: 'white'
                   }}

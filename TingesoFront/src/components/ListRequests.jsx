@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Container, Typography, Table, TableBody, TableCell, TableContainer, 
+import {
+  Container, Typography, Table, TableBody, TableCell, TableContainer,
   TableHead, TableRow, Paper, Button, Alert, Divider
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
@@ -28,18 +28,18 @@ const ListRequests = () => {
     }
   };
 
-  const handleViewRequest = (id, status,typeLoan) => {
+  const handleViewRequest = (id, status, typeLoan) => {
     if (status === 'Finalizada') return;
     const statusMap = {
       'En Aprobación Final': 'E6',
       'Aprobada': 'E9'
     };
-    statusMap[status] 
-      ? service.editStates({ id, status: statusMap[status] }) 
+    statusMap[status]
+      ? service.editStates({ id, status: statusMap[status] })
       : navigate(`/evaluationRequest/${id}/${typeLoan}`);
   };
 
-  const traducirTipoPrestamo = (tipo) => ({
+  const translateTypeLoan = (tipo) => ({
     'firstHome': 'Primera Vivienda',
     'secondHome': 'Segunda Vivienda',
     'commercial': 'Propiedad Comercial',
@@ -89,7 +89,7 @@ const ListRequests = () => {
                 {requests.map((request, index) => (
                   <TableRow key={request.id} sx={{ '&:nth-of-type(odd)': { backgroundColor: 'action.hover' } }}>
                     <TableCell>{index + 1}</TableCell>
-                    <TableCell>{traducirTipoPrestamo(request.typeLoan)}</TableCell>
+                    <TableCell>{translateTypeLoan(request.typeLoan)}</TableCell>
                     <TableCell>{request.rut}</TableCell>
                     <TableCell>{request.name}</TableCell>
                     <TableCell>{request.lastName}</TableCell>

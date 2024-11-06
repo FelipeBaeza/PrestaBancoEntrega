@@ -1,17 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
-import { 
-  TextField, 
-  Button, 
-  Container, 
-  Grid, 
-  Typography, 
-  Paper,
-  InputAdornment,
-  Box,
-  Divider,
-  Alert
-} from '@mui/material';
+import { TextField, Button, Container, Grid, Typography, Paper,InputAdornment,Box,Divider,Alert}
+ from '@mui/material';
 import { useNavigate } from "react-router-dom";
 import SaveIcon from "@mui/icons-material/Save";
 import PersonIcon from "@mui/icons-material/Person";
@@ -59,16 +49,12 @@ const Register = () => {
     setError(null);
 
     try {
-      // Primero validar disponibilidad
       const isAvailable = await validateRutAndPassword(formValues.rut, formValues.password);
 
       if (!isAvailable) {
         setError("El RUT o contraseña ya están en uso. Por favor, intente con otros datos.");
         return;
       }
-
-      // Si la validación es exitosa, continuar con el registro
-      // Aquí va tu código existente para el registro
       const response = await clientService.saveClient(formValues);
       navigate('/home');
       
