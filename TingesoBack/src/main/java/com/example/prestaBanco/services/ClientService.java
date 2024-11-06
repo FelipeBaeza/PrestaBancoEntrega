@@ -92,4 +92,8 @@ public class ClientService {
             return false;
         }
     }
+
+    public List<ClientEntity> allClients() {
+        return clientRepository.findAll();
+    }
 }

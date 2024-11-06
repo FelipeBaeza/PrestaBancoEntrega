@@ -57,4 +57,9 @@ public class ClientController {
         return ResponseEntity.ok(clientService.validateClient(rut, password));
     }
 
+    @GetMapping("/allClients")
+    public ResponseEntity<?> allClients() {
+        return ResponseEntity.ok(clientService.allClients());
+    }
+
 }
