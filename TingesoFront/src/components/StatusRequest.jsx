@@ -1,9 +1,34 @@
 import React, { useState } from 'react';
-import { TextField, Button, Container, Typography, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Box, Divider, InputAdornment, Alert, CircularProgress } from '@mui/material';
-import { Person, Search, CheckCircle, Cancel, MonetizationOn, Delete as DeleteIcon } from '@mui/icons-material';
+import { TextField, Button, Container, Typography, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Box, Divider, InputAdornment, Alert, CircularProgress, IconButton, Popover, List, ListItem, ListItemIcon, ListItemText } from '@mui/material';
+import { Person, Search, CheckCircle, Cancel, MonetizationOn, Delete as DeleteIcon, HelpOutline } from '@mui/icons-material';
 import service from '../services/client.service';
 import evaluationService from '../services/evaluation.service';
 import requestService from '../services/request.service';
+
+const FIELD_ICONS = {
+  rut: Person,
+};
+
+const FIELD_HELP = {
+  rut: "Formato: 12345678-9",
+};
+
+const INSTRUCTIONAL_GUIDE = (
+  <List>
+    <ListItem>
+      <ListItemText primary="1. Ingrese su RUT en el campo proporcionado. Asegúrese de que el formato sea correcto (ej: 12345678-9)." />
+    </ListItem>
+    <ListItem>
+      <ListItemText primary='2. Haga clic en el botón "Buscar Solicitudes" para obtener el estado de sus solicitudes.' />
+    </ListItem>
+    <ListItem>
+      <ListItemText primary='3. Si tiene solicitudes "Pre-Aprobadas", puede ver los costos del préstamo y decidir si aceptarlo o rechazarlo.' />
+    </ListItem>
+    <ListItem>
+      <ListItemText primary='4. También puede eliminar cualquier solicitud haciendo clic en el botón "Eliminar".' />
+    </ListItem>
+  </List>
+);
 
 const StatusRequest = () => {
   const [rut, setRut] = useState('');
@@ -11,15 +36,30 @@ const StatusRequest = () => {
   const [error, setError] = useState(null);
   const [totalCosts, setTotalCosts] = useState(null);
   const [selectedRequest, setSelectedRequest] = useState(null);
-  const [showDetails, setShowDetails] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [helpAnchorEl, setHelpAnchorEl] = useState(null);
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [showDetails, setShowDetails] = useState(false); 
 
   const handleRutChange = (e) => {
     setRut(e.target.value);
     setError(null);
+    setFieldErrors(prev => ({ ...prev, rut: validateRut(e.target.value) }));
+  };
+
+  const validateRut = (rut) => {
+    const rutPattern = /^\d{7,8}-[0-9kK]$/;
+    return rutPattern.test(rut) ? "" : "Formato inválido (ej: 12345678-9)";
   };
 
   const fetchRequests = async () => {
+    const rutError = validateRut(rut);
+    if (rutError) {
+      setFieldErrors({ rut: rutError });
+      setError('Formato de RUT incorrecto. Debe ser 12345678-9.');
+      return;
+    }
+
     setLoading(true);
     try {
       const response = await service.getAllStatus(rut);
@@ -30,8 +70,12 @@ const StatusRequest = () => {
           id: response.data[i + 1]
         });
       }
-      setRequests(formattedRequests);
-      setError(null);
+      if (formattedRequests.length === 0) {
+        setError('No se encontró ninguna solicitud vigente para el RUT ingresado.');
+      } else {
+        setRequests(formattedRequests);
+        setError(null);
+      }
     } catch (error) {
       setError('Error al obtener las solicitudes. Verifica el RUT e intenta de nuevo.');
     } finally {
@@ -70,7 +114,6 @@ const StatusRequest = () => {
   const handleDeleteRequest = async (id) => {
     if (window.confirm('¿Está seguro de eliminar esta solicitud?')) {
       setLoading(true);
-      console.log(id);
       try {
         await requestService.deleteRequest(id);
         await fetchRequests();
@@ -91,10 +134,29 @@ const StatusRequest = () => {
   return (
     <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
       <Paper elevation={3} sx={{ p: 4, borderRadius: 2 }}>
-        <Typography variant="h4" align="center" color="primary" gutterBottom>
-          Consulta de Solicitudes
-        </Typography>
-        <Divider sx={{ mb: 4 }} />
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+          <Typography variant="h4" align="center" color="primary" gutterBottom>
+            Consulta de Solicitudes
+          </Typography>
+          <IconButton onClick={(e) => setHelpAnchorEl(e.currentTarget)} color="primary">
+            <HelpOutline />
+          </IconButton>
+        </Box>
+
+        <Popover
+          open={Boolean(helpAnchorEl)}
+          anchorEl={helpAnchorEl}
+          onClose={() => setHelpAnchorEl(null)}
+          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+          transformOrigin={{ vertical: "top", horizontal: "right" }}
+        >
+          <Box sx={{ p: 3, maxWidth: 350 }}>
+            <Typography variant="h6" color="primary" gutterBottom>
+              Instrucciones
+            </Typography>
+            {INSTRUCTIONAL_GUIDE}
+          </Box>
+        </Popover>
 
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
@@ -109,11 +171,13 @@ const StatusRequest = () => {
             onChange={handleRutChange}
             fullWidth
             required
+            error={Boolean(fieldErrors.rut)}
+            helperText={fieldErrors.rut}
             sx={{ mb: 2 }}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
-                  <Person color="primary" />
+                  <Person color={fieldErrors.rut ? "error" : "primary"} />
                 </InputAdornment>
               ),
             }}

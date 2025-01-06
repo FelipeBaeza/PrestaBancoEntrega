@@ -1,15 +1,105 @@
 import React, { useState } from 'react';
-import { TextField, Button, Container, Grid, Typography, Paper, Divider, InputAdornment, Box,Alert,CircularProgress}from '@mui/material';
-import { Person, Upload as UploadIcon,SaveAlt,ArrowBack} from '@mui/icons-material';
+import { 
+  TextField, Button, Container, Grid, Typography, Paper, Divider, 
+  InputAdornment, Box, Alert, CircularProgress, Popover, List,
+  ListItem, ListItemIcon, ListItemText, IconButton
+} from '@mui/material';
+import { 
+  Person, Upload as UploadIcon, SaveAlt, ArrowBack, 
+  AttachMoney, Schedule, Percent, HelpOutline, 
+  Receipt, Assessment, History, AccountBalance, Work
+} from '@mui/icons-material';
 import { useParams, useNavigate } from 'react-router-dom';
 import service from '../services/request.service';
+import clientService from '../services/client.service';
+
+const FIELD_ICONS = {
+  rut: Person,
+  maximumAmount: AttachMoney,
+  interestRate: Percent,
+  term: Schedule,
+};
+
+const FIELD_HELP = {
+  rut: "Formato: 12345678-9",
+  maximumAmount: "Monto máximo a solicitar",
+  interestRate: "Tasa de interés anual (entre 1% y 15%)",
+  term: "Plazo en años (entre 5 y 30 años)",
+};
+
+const DOCUMENT_REQUIREMENTS = {
+  proofIncome: "Comprobante de Ingresos",
+  appraisalCertificate: "Certificado de Avalúo",
+  creditHistory: "Historial de Crédito",
+  bankAccountState: "Estado de Cuenta Bancaria",
+  workCertificate: "Certificado Laboral",
+};
+
+const DOCUMENT_ICONS = {
+  proofIncome: Receipt,
+  appraisalCertificate: Assessment,
+  creditHistory: History,
+  bankAccountState: AccountBalance,
+  workCertificate: Work,
+};
+
+const validateField = (name, value) => {
+  const validations = {
+    rut: (v) => (/^[0-9]{7,8}-[0-9kK]{1}$/.test(v) ? "" : "Formato inválido (ej: 12345678-9)"),
+    maximumAmount: (v) => {
+      const amount = Number(v);
+      return amount >= 1000000 && amount <= 100000000 
+        ? "" 
+        : "El monto debe estar entre 1.000.000 y 100.000.000";
+    },
+    interestRate: (v) => {
+      const rate = Number(v);
+      return rate >= 3.5 && rate <= 5.0 
+        ? "" 
+        : "La tasa debe estar entre 3.5% y 5.0%";
+    },
+    term: (v) => {
+      const years = Number(v);
+      return years >= 1 && years <= 30 
+        ? "" 
+        : "El plazo debe ser entre 1 y 30 años";
+    },
+  };
+  return validations[name] ? validations[name](value) : "";
+};
+
+const INSTRUCTIONAL_GUIDE = (
+  <List>
+    <ListItem>
+      <ListItemText primary="1. Complete todos los campos obligatorios marcados con un asterisco (*)" />
+    </ListItem>
+    <ListItem>
+      <ListItemText primary="2. Asegúrese de que el RUT esté en el formato correcto (ej: 12345678-9)" />
+    </ListItem>
+    <ListItem>
+      <ListItemText primary="3. Ingrese el monto máximo a solicitar (entre 1.000.000 y 100.000.000)" />
+    </ListItem>
+    <ListItem>
+      <ListItemText primary="4. Ingrese la tasa de interés anual (entre 3.5% y 5.0%)" />
+    </ListItem>
+    <ListItem>
+      <ListItemText primary="5. Ingrese el plazo en años (entre 1 y 30 años)" />
+    </ListItem>
+    <ListItem>
+      <ListItemText primary="6. Adjunte los documentos requeridos en formato PDF" />
+    </ListItem>
+    <ListItem>
+      <ListItemText primary='7. Haga clic en el botón "Enviar Solicitud" para completar el proceso' />
+    </ListItem>
+  </List>
+);
 
 const RequestFirstHome = () => {
   const { loanType } = useParams();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(false);
+  const [status, setStatus] = useState({ loading: false, success: false, error: null });
+  const [helpAnchorEl, setHelpAnchorEl] = useState(null);
+  const [fieldErrors, setFieldErrors] = useState({});
   
   const [formData, setFormData] = useState({
     rut: '',
@@ -24,68 +114,133 @@ const RequestFirstHome = () => {
     workCertificate: null
   });
 
-  const documentFields = [
-    { label: 'Comprobante de Ingresos', name: 'proofIncome', icon: <UploadIcon /> },
-    { label: 'Certificado de Avalúo', name: 'appraisalCertificate', icon: <UploadIcon /> },
-    { label: 'Historial de Crédito', name: 'creditHistory', icon: <UploadIcon /> },
-    { label: 'Estado de Cuenta Bancaria', name: 'bankAccountState', icon: <UploadIcon /> },
-    { label: 'Certificado Laboral', name: 'workCertificate', icon: <UploadIcon /> },
-];
-
   const handleChange = (event) => {
     const { name, value } = event.target;
     setFormData(prev => ({
       ...prev,
       [name]: value
     }));
+    setFieldErrors(prev => ({
+      ...prev,
+      [name]: validateField(name, value)
+    }));
+    setStatus(prev => ({ ...prev, error: null }));
   };
 
   const handleFileUpload = (event, fieldName) => {
     const file = event.target.files[0];
-    setFormData(prev => ({
-      ...prev,
-      [fieldName]: file
-    }));
+    if (file && file.type === 'application/pdf') {
+      setFormData(prev => ({
+        ...prev,
+        [fieldName]: file
+      }));
+      setFieldErrors(prev => ({
+        ...prev,
+        [fieldName]: ''
+      }));
+    } else {
+      setFieldErrors(prev => ({
+        ...prev,
+        [fieldName]: 'Solo se permiten archivos PDF'
+      }));
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    // Validate text fields
+    Object.keys(FIELD_ICONS).forEach(field => {
+      const error = validateField(field, formData[field]);
+      if (error) newErrors[field] = error;
+    });
+    
+    // Validate documents
+    Object.keys(DOCUMENT_REQUIREMENTS).forEach(doc => {
+      if (!formData[doc]) {
+        newErrors[doc] = 'Documento requerido';
+      }
+    });
+
+    setFieldErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    setLoading(true);
-    setError(null);
-
-    const formDataToSend = new FormData();
-    for (const key in formData) {
-      formDataToSend.append(key, formData[key]);
+    if (!validateForm()) {
+      setStatus({
+        loading: false,
+        success: false,
+        error: 'Por favor, corrija los errores antes de enviar.'
+      });
+      return;
     }
 
+    setStatus({ loading: true, success: false, error: null });
+
     try {
+      // Primero validamos el RUT
+      const rutValidation = await clientService.validateRut(formData.rut);
+      
+      if (!rutValidation.data) {
+        setStatus({
+          loading: false,
+          success: false,
+          error: 'El RUT ingresado no está registrado en el sistema. Por favor, regístrese primero.'
+        });
+        return;
+      }
+
+      const formDataToSend = new FormData();
+      Object.keys(formData).forEach(key => {
+        formDataToSend.append(key, formData[key]);
+      });
+
       const response = await service.firstHouse(formDataToSend);
       if (response.status === 200) {
-        setSuccess(true);
-        setTimeout(() => navigate('/home'), 2000);
+        setStatus({ loading: false, success: true, error: null });
+        setTimeout(() => navigate('/home'), 3000);
       }
     } catch (err) {
-      setError('Error al enviar la solicitud. Por favor, intente nuevamente.');
-    } finally {
-      setLoading(false);
+      setStatus({
+        loading: false,
+        success: false,
+        error: err.response?.data || 'Error al enviar la solicitud. Por favor, intente nuevamente.'
+      });
     }
   };
 
   return (
     <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
       <Paper elevation={3} sx={{ p: 4, borderRadius: 2 }}>
-        <Typography variant="h4" align="center" color="primary" gutterBottom>
-          Solicitud Primera Vivienda
-        </Typography>
+        <Box display="flex" justifyContent="space-between" alignItems="center">
+          <Typography variant="h4" color="primary" gutterBottom>
+            Solicitud Primera Vivienda
+          </Typography>
+          <IconButton onClick={(e) => setHelpAnchorEl(e.currentTarget)} color="primary">
+            <HelpOutline />
+          </IconButton>
+        </Box>
+        
         <Divider sx={{ mb: 4 }} />
 
-        {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {error}
-          </Alert>
-        )}
+        <Popover
+          open={Boolean(helpAnchorEl)}
+          anchorEl={helpAnchorEl}
+          onClose={() => setHelpAnchorEl(null)}
+          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+          transformOrigin={{ vertical: "top", horizontal: "right" }}
+        >
+          <Box sx={{ p: 3, maxWidth: 350 }}>
+            <Typography variant="h6" color="primary" gutterBottom>
+              Instrucciones
+            </Typography>
+            {INSTRUCTIONAL_GUIDE}
+          </Box>
+        </Popover>
 
-        {success && (
+        {status.error && <Alert severity="error" sx={{ mb: 2 }}>{status.error}</Alert>}
+        {status.success && (
           <Alert severity="success" sx={{ mb: 2 }}>
             Solicitud enviada exitosamente. Redirigiendo...
           </Alert>
@@ -107,10 +262,12 @@ const RequestFirstHome = () => {
                 onChange={handleChange}
                 fullWidth
                 required
+                error={Boolean(fieldErrors.rut)}
+                helperText={fieldErrors.rut}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
-                      <Person color="primary" />
+                      <Person color={fieldErrors.rut ? "error" : "primary"} />
                     </InputAdornment>
                   ),
                 }}
@@ -123,7 +280,6 @@ const RequestFirstHome = () => {
               </Typography>
             </Grid>
 
-
             <Grid item xs={12} md={4}>
               <TextField
                 label="Monto Máximo"
@@ -133,38 +289,56 @@ const RequestFirstHome = () => {
                 onChange={handleChange}
                 fullWidth
                 required
+                error={Boolean(fieldErrors.maximumAmount)}
+                helperText={fieldErrors.maximumAmount}
                 InputProps={{
-                  startAdornment: <InputAdornment position="start">$</InputAdornment>,
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <AttachMoney color={fieldErrors.maximumAmount ? "error" : "primary"} />
+                    </InputAdornment>
+                  ),
                 }}
               />
             </Grid>
 
             <Grid item xs={12} md={4}>
               <TextField
-                label="Tasa de Interés Anual (%)"
+                label="Tasa de Interés Anual"
                 name="interestRate"
                 type="number"
                 value={formData.interestRate}
                 onChange={handleChange}
                 fullWidth
                 required
+                error={Boolean(fieldErrors.interestRate)}
+                helperText={fieldErrors.interestRate}
                 InputProps={{
-                  endAdornment: <InputAdornment position="end">%</InputAdornment>,
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Percent color={fieldErrors.interestRate ? "error" : "primary"} />
+                    </InputAdornment>
+                  ),
                 }}
               />
             </Grid>
 
             <Grid item xs={12} md={4}>
               <TextField
-                label="Plazo (años)"
+                label="Plazo"
                 name="term"
                 type="number"
                 value={formData.term}
                 onChange={handleChange}
                 fullWidth
                 required
+                error={Boolean(fieldErrors.term)}
+                helperText={fieldErrors.term}
                 InputProps={{
-                  endAdornment: <InputAdornment position="end">años</InputAdornment>,
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Schedule color={fieldErrors.term ? "error" : "primary"} />
+                    </InputAdornment>
+                  ),
                 }}
               />
             </Grid>
@@ -175,23 +349,35 @@ const RequestFirstHome = () => {
               </Typography>
             </Grid>
 
-            {documentFields.map((doc) => (
-              <Grid item xs={12} sm={6} key={doc.name}>
-                <Button
-                  variant="outlined"
-                  component="label"
-                  fullWidth
-                  startIcon={<UploadIcon />}
-                  sx={{py: 2,textTransform: 'none'}}
-                >
-                  {formData[doc.name] ? formData[doc.name].name : doc.label}
-                  <input
-                    type="file"
-                    hidden
-                    onChange={(event) => handleFileUpload(event, doc.name)}
-                    accept=".pdf"
-                  />
-                </Button>
+            {Object.entries(DOCUMENT_REQUIREMENTS).map(([fieldName, requirement]) => (
+              <Grid item xs={12} sm={6} key={fieldName}>
+                <Box>
+                  <Button
+                    variant="outlined"
+                    component="label"
+                    fullWidth
+                    startIcon={React.createElement(DOCUMENT_ICONS[fieldName])}
+                    sx={{
+                      py: 2,
+                      textTransform: 'none',
+                      borderColor: fieldErrors[fieldName] ? 'error.main' : undefined,
+                      color: fieldErrors[fieldName] ? 'error.main' : undefined,
+                    }}
+                  >
+                    {formData[fieldName] ? formData[fieldName].name : requirement}
+                    <input
+                      type="file"
+                      hidden
+                      onChange={(event) => handleFileUpload(event, fieldName)}
+                      accept=".pdf"
+                    />
+                  </Button>
+                  {fieldErrors[fieldName] && (
+                    <Typography color="error" variant="caption" sx={{ ml: 2 }}>
+                      {fieldErrors[fieldName]}
+                    </Typography>
+                  )}
+                </Box>
               </Grid>
             ))}
 
@@ -215,8 +401,8 @@ const RequestFirstHome = () => {
                   variant="contained"
                   color="primary"
                   type="submit"
-                  disabled={loading}
-                  startIcon={loading ? <CircularProgress size={20} /> : <SaveAlt />}
+                  disabled={status.loading || status.success}
+                  startIcon={status.loading ? <CircularProgress size={20} /> : <SaveAlt />}
                   sx={{
                     px: 4,
                     py: 1.5,
@@ -224,7 +410,7 @@ const RequestFirstHome = () => {
                     textTransform: 'none'
                   }}
                 >
-                  {loading ? 'Enviando...' : 'Enviar Solicitud'}
+                  {status.loading ? 'Enviando...' : status.success ? 'Enviado' : 'Enviar Solicitud'}
                 </Button>
               </Box>
             </Grid>

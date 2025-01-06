@@ -20,4 +20,8 @@ const validateRutAndPassword = ({ rut, password }) => {
   return httpClient.get(`/api/v1/clients/validateRutAndPassword/${rut}/${password}`);
 }
 
-export default { simulation, saveClient, login, getAllStatus, validateRutAndPassword };
+const validateRut = (rut) => {
+  return httpClient.get(`/api/v1/clients/validateRut/${rut}`);
+};
+
+export default { simulation, saveClient, login, getAllStatus, validateRutAndPassword, validateRut };

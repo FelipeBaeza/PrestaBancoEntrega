@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
-import { TextField, Box, Button, Container, Grid, Typography, Paper, FormControl, FormControlLabel, RadioGroup, Radio, Divider } from '@mui/material';
+import {
+  TextField, Box, Button, Container, Grid, Typography, Paper, FormControl, FormControlLabel, RadioGroup, Radio, Divider, CircularProgress, Snackbar, Popover, List, ListItem, ListItemText, IconButton
+} from '@mui/material';
 import DownloadIcon from '@mui/icons-material/Download';
+import { HelpOutline } from '@mui/icons-material';
 import service from '../services/request.service';
 import evaluationService from '../services/evaluation.service';
 import RequestService from '../services/request.service';
@@ -42,14 +45,13 @@ const DOCUMENTS_BY_TYPE = {
   ]
 };
 
-
 const EvaluationRequest = () => {
   const [evaluationData, setEvaluationData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
-  const { applicationId } = useParams();
-  const { typeLoan } = useParams();
+  const { applicationId, typeLoan } = useParams();
   const navigate = useNavigate();
+  const [helpAnchorEl, setHelpAnchorEl] = useState(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -79,7 +81,6 @@ const EvaluationRequest = () => {
       fetchEvaluationData();
     }
 
-    // Cleanup function
     return () => {
       isMounted = false;
     };
@@ -116,6 +117,7 @@ const EvaluationRequest = () => {
   const [savingStatus, setSavingStatus] = useState('');
   const [savingRatio, setSavingRatio] = useState(null);
   const [isSubmitDisabled, setIsSubmitDisabled] = useState(true);
+  const [success, setSuccess] = useState(false);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -141,11 +143,8 @@ const EvaluationRequest = () => {
       });
 
       const monthlyPayment = simulationData.data;
-
-
       const paymentToIncomeRatio = (monthlyPayment / monthlyIncome) * 100;
       setRatio(paymentToIncomeRatio);
-
 
       const isApproved = paymentToIncomeRatio <= 35;
       setApproved(isApproved);
@@ -177,7 +176,6 @@ const EvaluationRequest = () => {
     if (formValues.accumulatedBalance) positiveAnswers++;
     if (formValues.avoidWithdrawals) positiveAnswers++;
 
-    // Generar mensaje basado en la cantidad de respuestas positivas
     if (positiveAnswers >= 5) {
       const response = "Aprobación";
       setSavingStatus(response);
@@ -191,17 +189,19 @@ const EvaluationRequest = () => {
       setSavingStatus(response);
       formValues.savingsCapacity = false;
     }
-    setIsSubmitDisabled(false); // Habilitar el botón de enviar solicitud
+    setIsSubmitDisabled(false);
   };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     setError(null);
+    setLoading(true);
     try {
       console.log(formValues);
       const response = await evaluationService.dataEvaluation(formValues);
       if (response.status === 200) {
         navigate('/home');
+        setSuccess(true);
       } else {
         setError('Error al enviar la solicitud. Intenta nuevamente.');
       }
@@ -211,13 +211,15 @@ const EvaluationRequest = () => {
       } else {
         setError('Error al enviar la solicitud. Intenta nuevamente.');
       }
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleDownloadDocument = async (documentName) => {
     try {
       const response = await axios.get(
-        `http://191.235.93.182/api/v1/creditRequest/${applicationId}/documents/${documentName}`,
+        `http://localhost:8090/api/v1/creditRequest/${applicationId}/documents/${documentName}`,
         { responseType: 'blob' }
       );
 
@@ -242,7 +244,7 @@ const EvaluationRequest = () => {
     return (
       <Grid container spacing={2} sx={{ mt: 2 }}>
         <Grid item xs={12}>
-          <Typography variant="h6">Documentos del Préstamo</Typography>
+          <Typography variant="h6" color="primary">Documentos del Préstamo</Typography>
         </Grid>
         {documentos.map((doc) => (
           <Grid item xs={12} sm={6} md={4} key={doc.id}>
@@ -251,6 +253,7 @@ const EvaluationRequest = () => {
               fullWidth
               startIcon={<DownloadIcon />}
               onClick={() => handleDownloadDocument(doc.id)}
+              sx={{ mb: 2 }}
             >
               {doc.nombre}
             </Button>
@@ -265,35 +268,82 @@ const EvaluationRequest = () => {
     navigate('/requests');
   };
 
+  const handleMissingDocuments = () => {
+    const response = service.editStates({ id: applicationId, status: 'E2' });
+    navigate('/requests');
+  };
+
   const handleNavigateToExit = () => {
     navigate('/requests');
-  }
+  };
 
   if (isLoading) return <div>Cargando...</div>;
   if (error) return <div>Error: {error}</div>;
 
   return (
-    <Container maxWidth="md">
-      <Paper elevation={3} style={{ padding: '2rem', marginTop: '2rem' }}>
+    <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
+      <Paper elevation={3} sx={{ p: 4, borderRadius: 2 }}>
+        <Box display="flex" justifyContent="space-between" alignItems="center">
+          <Typography variant="h4" color="primary" gutterBottom>
+            Evaluación de Solicitud
+          </Typography>
+          <IconButton onClick={(e) => setHelpAnchorEl(e.currentTarget)} color="primary">
+            <HelpOutline />
+          </IconButton>
+        </Box>
+
+        <Popover
+          open={Boolean(helpAnchorEl)}
+          anchorEl={helpAnchorEl}
+          onClose={() => setHelpAnchorEl(null)}
+          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+          transformOrigin={{ vertical: "top", horizontal: "right" }}
+        >
+          <Box sx={{ p: 3, maxWidth: 350 }}>
+            <Typography variant="h6" color="primary" gutterBottom>
+              Pasos para la Evaluación
+            </Typography>
+            <List>
+              <ListItem>
+                <ListItemText primary="1. Descargue los documentos necesarios." />
+              </ListItem>
+              <ListItem>
+                <ListItemText primary="2. Responda cada pregunta seleccionando 'Sí' o 'No' según corresponda." />
+              </ListItem>
+              <ListItem>
+                <ListItemText primary="3. En la sección de 'Capacidad de Ahorro', seleccione 'Sí' o 'No' para cada requisito y presione 'Revisar Estado de Ahorro'." />
+              </ListItem>
+              <ListItem>
+                <ListItemText primary="4. Finalmente, presione 'Enviar Solicitud' para completar el proceso." />
+              </ListItem>
+            </List>
+          </Box>
+        </Popover>
+
+        <Divider sx={{ my: 4 }} />
+
         <Grid item xs={12}>
           <Box sx={{ mt: 3, width: '100%' }}>
             <DocumentButtons />
           </Box>
         </Grid>
 
-        <Divider style={{ marginTop: '1rem', marginBottom: '1rem' }} />
+        <Divider sx={{ my: 4 }} />
 
-        <Typography variant="h5" gutterBottom>
+        <Typography variant="h5" color="primary" gutterBottom>
           Formulario de Solicitud de Préstamo
         </Typography>
 
-        <Divider style={{ marginTop: '1rem', marginBottom: '1rem' }} />
+        <Divider sx={{ my: 4 }} />
 
         <Box sx={{ mb: 3, maxWidth: "400px", margin: "0 auto" }}>
-          <Typography variant="h6" gutterBottom>
+          <Typography variant="h6" color="primary" gutterBottom>
             Evaluación de Ingresos
           </Typography>
-          <TextField label="Ingreso Mensual" type="number" value={monthlyIncome}
+          <TextField
+            label="Ingreso Mensual"
+            type="number"
+            value={monthlyIncome}
             onChange={(e) => setMonthlyIncome(e.target.value)}
             fullWidth
             sx={{ mb: 2 }}
@@ -304,6 +354,7 @@ const EvaluationRequest = () => {
             onClick={calculate}
             disabled={!monthlyIncome || loading}
             fullWidth
+            sx={{ mb: 2 }}
           >
             Calcular Relación Cuota/Ingreso
           </Button>
@@ -318,43 +369,65 @@ const EvaluationRequest = () => {
 
         <form onSubmit={handleSubmit}>
           <Grid container spacing={3}>
-
             <Grid item xs={12}>
               <FormControl component="fieldset" fullWidth>
-                <Typography variant="h6" align="center">¿Presenta una relación cuota/ingreso menor al 35%?</Typography>
-                <RadioGroup row name="incomeQuota" value={formValues.incomeQuota === null ? '' : formValues.incomeQuota ? 'si' : 'no'} onChange={handleChange} sx={{ justifyContent: 'center', mt: 2 }}>
+                <Typography variant="h6" color="primary" align="center">
+                  ¿Presenta una relación cuota/ingreso menor al 35%?
+                </Typography>
+                <RadioGroup
+                  row
+                  name="incomeQuota"
+                  value={formValues.incomeQuota === null ? '' : formValues.incomeQuota ? 'si' : 'no'}
+                  onChange={handleChange}
+                  sx={{ justifyContent: 'center', mt: 2 }}
+                >
                   <FormControlLabel value="si" control={<Radio color="primary" />} label="Sí" />
                   <FormControlLabel value="no" control={<Radio color="secondary" />} label="No" />
                 </RadioGroup>
               </FormControl>
-              <Divider />
+              <Divider sx={{ my: 2 }} />
             </Grid>
 
             <Grid item xs={12}>
               <FormControl component="fieldset" fullWidth>
-                <Typography variant="h6" align="center">¿Tiene un buen historial crediticio sin morosidades recientes?</Typography>
-                <RadioGroup row name="creditHistory" value={formValues.creditHistory === null ? '' : formValues.creditHistory ? 'si' : 'no'} onChange={handleChange} sx={{ justifyContent: 'center', mt: 2 }}>
+                <Typography variant="h6" color="primary" align="center">
+                  ¿Tiene un buen historial crediticio sin morosidades recientes?
+                </Typography>
+                <RadioGroup
+                  row
+                  name="creditHistory"
+                  value={formValues.creditHistory === null ? '' : formValues.creditHistory ? 'si' : 'no'}
+                  onChange={handleChange}
+                  sx={{ justifyContent: 'center', mt: 2 }}
+                >
                   <FormControlLabel value="si" control={<Radio color="primary" />} label="Sí" />
                   <FormControlLabel value="no" control={<Radio color="secondary" />} label="No" />
                 </RadioGroup>
               </FormControl>
-              <Divider />
+              <Divider sx={{ my: 2 }} />
             </Grid>
 
             <Grid item xs={12}>
               <FormControl component="fieldset" fullWidth>
-                <Typography variant="h6" align="center">¿Cuenta con al menos 1 a 2 años de antigüedad en su empleo actual?</Typography>
-                <RadioGroup row name="employmentSeniority" value={formValues.employmentSeniority === null ? '' : formValues.employmentSeniority ? 'si' : 'no'} onChange={handleChange} sx={{ justifyContent: 'center', mt: 2 }}>
+                <Typography variant="h6" color="primary" align="center">
+                  ¿Cuenta con al menos 1 a 2 años de antigüedad en su empleo actual?
+                </Typography>
+                <RadioGroup
+                  row
+                  name="employmentSeniority"
+                  value={formValues.employmentSeniority === null ? '' : formValues.employmentSeniority ? 'si' : 'no'}
+                  onChange={handleChange}
+                  sx={{ justifyContent: 'center', mt: 2 }}
+                >
                   <FormControlLabel value="si" control={<Radio color="primary" />} label="Sí" />
                   <FormControlLabel value="no" control={<Radio color="secondary" />} label="No" />
                 </RadioGroup>
               </FormControl>
-              <Divider />
+              <Divider sx={{ my: 2 }} />
             </Grid>
-
 
             <Box sx={{ mb: 3, maxWidth: "400px", margin: "0 auto" }}>
-              <Typography variant="h6" gutterBottom>
+              <Typography variant="h6" color="primary" gutterBottom>
                 Evaluación Deuda/Ingreso
               </Typography>
               <TextField
@@ -371,6 +444,7 @@ const EvaluationRequest = () => {
                 onClick={calculateDebtRatio}
                 disabled={!currentDebts || !monthlyIncome || loading}
                 fullWidth
+                sx={{ mb: 2 }}
               >
                 Calcular Relación Deuda/Ingreso
               </Button>
@@ -385,44 +459,71 @@ const EvaluationRequest = () => {
 
             <Grid item xs={12}>
               <FormControl component="fieldset" fullWidth>
-                <Typography variant="h6" align="center">¿Su relación deuda/ingreso es menor al 50% incluyendo el nuevo crédito?</Typography>
-                <RadioGroup row name="incomeDebtRelation" value={formValues.incomeDebtRelation === null ? '' : formValues.incomeDebtRelation ? 'si' : 'no'} onChange={handleChange} sx={{ justifyContent: 'center', mt: 2 }}>
+                <Typography variant="h6" color="primary" align="center">
+                  ¿Su relación deuda/ingreso es menor al 50% incluyendo el nuevo crédito?
+                </Typography>
+                <RadioGroup
+                  row
+                  name="incomeDebtRelation"
+                  value={formValues.incomeDebtRelation === null ? '' : formValues.incomeDebtRelation ? 'si' : 'no'}
+                  onChange={handleChange}
+                  sx={{ justifyContent: 'center', mt: 2 }}
+                >
                   <FormControlLabel value="si" control={<Radio color="primary" />} label="Sí" />
                   <FormControlLabel value="no" control={<Radio color="secondary" />} label="No" />
                 </RadioGroup>
               </FormControl>
-              <Divider />
-            </Grid>
-
-
-            <Grid item xs={12}>
-              <FormControl component="fieldset" fullWidth>
-                <Typography variant="h6" align="center">¿El monto solicitado respeta el límite de financiamiento según el tipo de propiedad?</Typography>
-                <RadioGroup row name="financingLimit" value={formValues.financingLimit === null ? '' : formValues.financingLimit ? 'si' : 'no'} onChange={handleChange} sx={{ justifyContent: 'center', mt: 2 }}>
-                  <FormControlLabel value="si" control={<Radio color="primary" />} label="Sí" />
-                  <FormControlLabel value="no" control={<Radio color="secondary" />} label="No" />
-                </RadioGroup>
-              </FormControl>
-              <Divider />
+              <Divider sx={{ my: 2 }} />
             </Grid>
 
             <Grid item xs={12}>
               <FormControl component="fieldset" fullWidth>
-                <Typography variant="h6" align="center">¿La edad del solicitante permite pagar el crédito antes de los 75 años?</Typography>
-                <RadioGroup row name="applicantAge" value={formValues.applicantAge === null ? '' : formValues.applicantAge ? 'si' : 'no'} onChange={handleChange} sx={{ justifyContent: 'center', mt: 2 }}>
+                <Typography variant="h6" color="primary" align="center">
+                  ¿El monto solicitado respeta el límite de financiamiento según el tipo de propiedad?
+                </Typography>
+                <RadioGroup
+                  row
+                  name="financingLimit"
+                  value={formValues.financingLimit === null ? '' : formValues.financingLimit ? 'si' : 'no'}
+                  onChange={handleChange}
+                  sx={{ justifyContent: 'center', mt: 2 }}
+                >
                   <FormControlLabel value="si" control={<Radio color="primary" />} label="Sí" />
                   <FormControlLabel value="no" control={<Radio color="secondary" />} label="No" />
                 </RadioGroup>
               </FormControl>
-              <Divider />
+              <Divider sx={{ my: 2 }} />
             </Grid>
 
-            <Divider style={{ marginTop: '1rem', marginBottom: '1rem' }} />
+            <Grid item xs={12}>
+              <FormControl component="fieldset" fullWidth>
+                <Typography variant="h6" color="primary" align="center">
+                  ¿La edad del solicitante permite pagar el crédito antes de los 75 años?
+                </Typography>
+                <RadioGroup
+                  row
+                  name="applicantAge"
+                  value={formValues.applicantAge === null ? '' : formValues.applicantAge ? 'si' : 'no'}
+                  onChange={handleChange}
+                  sx={{ justifyContent: 'center', mt: 2 }}
+                >
+                  <FormControlLabel value="si" control={<Radio color="primary" />} label="Sí" />
+                  <FormControlLabel value="no" control={<Radio color="secondary" />} label="No" />
+                </RadioGroup>
+              </FormControl>
+              <Divider sx={{ my: 2 }} />
+            </Grid>
+
+            <Divider sx={{ my: 4 }} />
 
             <Box sx={{ mb: 3, maxWidth: "400px", margin: "0 auto" }}>
-              <Typography variant="h5" gutterBottom>
+
+
+              <Typography variant="h5" color="primary" gutterBottom>
                 Capacidad de Ahorro
               </Typography>
+
+              <Divider sx={{ my: 4 }} />
 
               {error && (
                 <Typography variant="body1" color="error" align="center" sx={{ mt: 2 }}>
@@ -440,7 +541,7 @@ const EvaluationRequest = () => {
                 ].map((item, index) => (
                   <Grid item xs={12} key={index}>
                     <FormControl component="fieldset" fullWidth>
-                      <Typography variant="h6" align="center">
+                      <Typography variant="h6" color="primary" align="center">
                         {item.question}
                       </Typography>
                       <RadioGroup
@@ -451,7 +552,7 @@ const EvaluationRequest = () => {
                         <FormControlLabel value="no" control={<Radio color="secondary" />} label="No" />
                       </RadioGroup>
                     </FormControl>
-                    <Divider />
+                    <Divider sx={{ my: 2 }} />
                   </Grid>
                 ))}
 
@@ -461,6 +562,7 @@ const EvaluationRequest = () => {
                     color="primary"
                     fullWidth
                     onClick={checkSavings}
+                    sx={{ mb: 2 }}
                   >
                     Revisar Estado de Ahorro
                   </Button>
@@ -475,41 +577,52 @@ const EvaluationRequest = () => {
 
             <Grid item xs={12}>
               <Grid container spacing={2}>
-                <Grid item xs={6}>
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    type="submit"
-                    fullWidth
-                    disabled={isSubmitDisabled}
-                  >
-                    Enviar Solicitud
-                  </Button>
+                <Grid item xs={4}>
+                  <Box display="flex" justifyContent="center" alignItems="center" height="100%">
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      type="submit"
+                      fullWidth
+                      disabled={isSubmitDisabled}
+                      sx={{ padding: '10px 0' }}
+                    >
+                      {loading ? <CircularProgress size={24} /> : 'Enviar Solicitud'}
+                    </Button>
+                  </Box>
                 </Grid>
-                <Grid item xs={6}>
-                  <Button
-                    variant="outlined"
-                    color="primary"
-                    onClick={handleNavigateToList}
-                    fullWidth
-                  >
-                    Falta de Documento
-                  </Button>
+                <Grid item xs={4}>
+                  <Box display="flex" justifyContent="center" alignItems="center" height="100%">
+                    <Button
+                      variant="outlined"
+                      color="primary"
+                      onClick={handleMissingDocuments}
+                      fullWidth
+                      sx={{ padding: '10px 0' }}
+                    >
+                      Falta de Documentación
+                    </Button>
+                  </Box>
                 </Grid>
-                <Grid item xs={6}>
-                  <Button
-                    variant="outlined"
-                    color="primary"
-                    onClick={handleNavigateToExit}
-                    fullWidth
-                  >
-                    Salir
-                  </Button>
+                <Grid item xs={4}>
+                  <Box display="flex" justifyContent="center" alignItems="center" height="100%">
+                    <Button
+                      variant="outlined"
+                      color="primary"
+                      onClick={handleNavigateToList}
+                      fullWidth
+                      sx={{ padding: '10px 0' }}
+                    >
+                      Cancelar
+                    </Button>
+                  </Box>
                 </Grid>
               </Grid>
             </Grid>
           </Grid>
         </form>
+        {error && <Snackbar open={true} message={error} />}
+        {success && <Snackbar open={true} message="Request submitted successfully!" />}
       </Paper>
     </Container>
   );

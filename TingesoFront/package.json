@@ -10,14 +10,22 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@date-io/date-fns": "^3.2.0",
     "@emotion/react": "^11.13.3",
     "@emotion/styled": "^11.13.0",
     "@mui/icons-material": "^6.1.6",
+    "@mui/lab": "^6.0.0-beta.21",
     "@mui/material": "^6.1.6",
+    "@mui/styles": "^6.3.0",
+    "@mui/x-date-pickers": "^7.23.3",
     "axios": "^1.7.7",
     "bootstrap": "^5.3.3",
+    "date-fns": "^4.1.0",
+    "dayjs": "^1.11.13",
     "jszip": "^3.10.1",
+    "lucide-react": "^0.469.0",
     "react": "^18.3.1",
+    "react-datepicker": "^7.5.0",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.27.0"
   },

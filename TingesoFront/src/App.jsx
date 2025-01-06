@@ -27,7 +27,7 @@ function App() {
           <Route path="/selectType" element={<SelectType />} />
           <Route path="/requestFirstHome/:loanType" element={<RequestFirstHome />} />
           <Route path="/requestSecondHome/:loanType" element={<RequestSecondHome />} />
-          <Route path="/requestCommercialProperty/:loanType" element={<RequestCommercialProperty />} />
+          <Route path="/requestCommercial/:loanType" element={<RequestCommercialProperty />} />
           <Route path="/requestRemodeling/:loanType" element={<RequestRemodeling />} />
           <Route path="/statusRequest" element={<StatusRequest />} />
           <Route path="/requests" element={<ListRequests />} />

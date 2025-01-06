@@ -12,5 +12,5 @@ public interface ClientRepository extends JpaRepository<ClientEntity, Long> {
 
     Optional<ClientEntity> findByRut(String rut);
 
-    ClientEntity findByRutAndPassword(String rut, String password);
+    Optional<ClientEntity> findByRutAndPassword(String rut, String password);
 }

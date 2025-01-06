@@ -23,8 +23,8 @@ public class ClientController {
 
     @PostMapping("/save")
     public ResponseEntity<?> saveClient(@RequestBody ClientEntity client) {
-        ClientEntity clientNew = clientService.saveClient(client);
-        return ResponseEntity.ok(clientNew);
+        String status = clientService.saveClient(client);
+        return ResponseEntity.ok(status);
     }
 
 
@@ -62,4 +62,8 @@ public class ClientController {
         return ResponseEntity.ok(clientService.allClients());
     }
 
+    @GetMapping("/validateRut/{rut}")
+    public ResponseEntity<?> validateRut(@PathVariable String rut) {
+        return ResponseEntity.ok(clientService.validateRut(rut));
+    }
 }

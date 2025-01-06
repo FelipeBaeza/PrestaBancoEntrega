@@ -423,4 +423,34 @@ public class CreditRequestService {
         creditRequestRepository.deleteById(id);
         return true;
     }
+
+    public Map<String, String> getLoanTypeInfo(String loanType) {
+        Map<String, Map<String, String>> loanTypes = new HashMap<>();
+
+        // Primera Vivienda
+        Map<String, String> firstHouse = new HashMap<>();
+        firstHouse.put("Plazo", "30 años");
+        firstHouse.put("Tasa Interés (Anual)", "3.5% - 5.0%");
+        loanTypes.put("Primera Vivienda", firstHouse);
+
+        // Segunda Vivienda
+        Map<String, String> secondHouse = new HashMap<>();
+        secondHouse.put("Plazo", "20 años");
+        secondHouse.put("Tasa Interés (Anual)", "4.0% - 6.0%");
+        loanTypes.put("Segunda Vivienda", secondHouse);
+
+        // Propiedades Comerciales
+        Map<String, String> commercialProperty = new HashMap<>();
+        commercialProperty.put("Plazo", "25 años");
+        commercialProperty.put("Tasa Interés (Anual)", "5.0% - 7.0%");
+        loanTypes.put("Propiedades Comerciales", commercialProperty);
+
+        // Remodelación
+        Map<String, String> remodeling = new HashMap<>();
+        remodeling.put("Plazo", "15 años");
+        remodeling.put("Tasa Interés (Anual)", "4.5% - 6.0%");
+        loanTypes.put("Remodelación", remodeling);
+
+        return loanTypes.getOrDefault(loanType, new HashMap<>());
+    }
 }

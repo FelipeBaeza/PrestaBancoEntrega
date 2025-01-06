@@ -52,4 +52,8 @@ const deleteRequest = (id) => {
     return httpClient.delete(`/api/v1/creditRequest/delete/${id}`);
 }
 
-export default { firstHouse, secondHouse, commercialProperty, remodeling, getAllRequests, getDocument, getRequest, editStates, deleteRequest };
+const getLoanTypeInfo = (loanType) => {
+    return httpClient.get(`/api/v1/creditRequest/loanTypes/${loanType}`);
+};
+
+export default { firstHouse, secondHouse, commercialProperty, remodeling, getAllRequests, getDocument, getRequest, editStates, deleteRequest, getLoanTypeInfo };

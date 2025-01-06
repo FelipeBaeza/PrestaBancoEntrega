@@ -1,17 +1,37 @@
 import React, { useState, useEffect } from 'react';
 import {
   Container, Typography, Table, TableBody, TableCell, TableContainer,
-  TableHead, TableRow, Paper, Button, Alert, Divider
+  TableHead, TableRow, Paper, Button, Alert, Divider, CircularProgress, List, ListItem, ListItemText
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import service from '../services/request.service';
 import RefreshIcon from '@mui/icons-material/Refresh';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import Tooltip from '@mui/material/Tooltip';
+import Popover from '@mui/material/Popover';
+import Box from '@mui/material/Box';
+import IconButton from '@mui/material/IconButton';
 
 const ListRequests = () => {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [helpAnchorEl, setHelpAnchorEl] = useState(null);
   const navigate = useNavigate();
+
+  const INSTRUCTIONAL_GUIDE = (
+    <List>
+      <ListItem>
+        <ListItemText primary="1. Aquí puede ver y gestionar las solicitudes de préstamo." />
+      </ListItem>
+      <ListItem>
+        <ListItemText primary="2. Use los botones para ver detalles, aprobar o finalizar solicitudes según el estado actual." />
+      </ListItem>
+      <ListItem>
+        <ListItemText primary="3. Puede recargar la página para obtener la información más reciente." />
+      </ListItem>
+    </List>
+  );
 
   useEffect(() => { fetchRequests(); }, []);
 
@@ -55,9 +75,32 @@ const ListRequests = () => {
   return (
     <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
       <Paper elevation={3} sx={{ p: 4, borderRadius: 2 }}>
-        <Typography variant="h4" align="center" color="primary" gutterBottom>
-          Lista de Solicitudes
-        </Typography>
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+          <Typography variant="h4" align="center" color="primary" gutterBottom>
+            Lista de Solicitudes
+          </Typography>
+          <IconButton 
+            onClick={(e) => setHelpAnchorEl(e.currentTarget)} 
+            color="primary"
+            aria-label="ayuda"
+          >
+            <HelpOutlineIcon />
+          </IconButton>
+        </Box>
+        <Popover
+          open={Boolean(helpAnchorEl)}
+          anchorEl={helpAnchorEl}
+          onClose={() => setHelpAnchorEl(null)}
+          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+          transformOrigin={{ vertical: "top", horizontal: "right" }}
+        >
+          <Box sx={{ p: 3, maxWidth: 350 }}>
+            <Typography variant="h6" color="primary" gutterBottom>
+              Instrucciones
+            </Typography>
+            {INSTRUCTIONAL_GUIDE}
+          </Box>
+        </Popover>
         <Divider sx={{ mb: 4 }} />
 
         <Button
@@ -69,6 +112,8 @@ const ListRequests = () => {
         >
           Recargar Página
         </Button>
+
+        {loading && <CircularProgress sx={{ display: 'block', margin: '0 auto', mb: 2 }} />}
 
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
@@ -99,6 +144,7 @@ const ListRequests = () => {
                         variant="contained"
                         color="primary"
                         onClick={() => handleViewRequest(Number(request.id), request.status, request.typeLoan)}
+                        disabled={request.status === 'Finalizada'}
                       >
                         {getButtonText(request.status)}
                       </Button>

@@ -191,6 +191,11 @@ public class CreditRequestController {
         return ResponseEntity.ok(creditRequestService.deleteRequest(id));
     }
 
+    @GetMapping("/loanTypes/{loanType}")
+    public ResponseEntity<?> getLoanTypes(@PathVariable String loanType) {
+        return ResponseEntity.ok(creditRequestService.getLoanTypeInfo(loanType));
+    }
+
 
 
 
